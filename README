@@ -34,6 +34,10 @@ $ ./build/qirimonit
 1586450302,0.33,0.21,0.16,
 1586450307,0.31,0.20,0.16,
 
+Or more convenient:
+
+$ ./build/qirimonit > $HOME/load_avg.csv
+
 License:
 ========
 

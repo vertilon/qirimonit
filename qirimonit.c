@@ -18,14 +18,16 @@ void kill_child( int signum ) {
 
 int main( int argc, char *argv[]) {
 	int interval;		// How often to get metric
+	int fildes[2];
+	char buf[BUFF_SIZE];
+	int i;	// General purpose counter
+
+
 	if( argc > 1 ) {
 		interval = atoi( argv[1]);
 	} else {
 		interval = 5;	// Set metrics interval to 5 seconds, if it is not specified as argument
 	}
-	int fildes[2];
-	char buf[BUFF_SIZE];
-	ssize_t nbytes;
 
 	if( pipe( fildes ) == -1 ) perror( "pipe");	// Create pipe for interprocess IO communication
 
@@ -37,12 +39,13 @@ int main( int argc, char *argv[]) {
 		// Child process which wilkl output to STDOUT metrics provided by parent
 		if( close( fildes[1]) == -1 ) perror( "client: close write");	// Close write fd of pipe, since I'm not going to write to it
 		while( TRUE ) {
+			for( i = 0; i < BUFF_SIZE; i++ ) buf[i] = '\0';
 			if( raise( SIGSTOP ) != 0 ) perror( "client: raise SIGSTOP");	// Ask kernel to stop me, so when server will be ready to send data, it can ask kernel to resume me to read the new data
 			if( read( fildes[0], &buf, BUFF_SIZE ) == -1 ){
 				perror( "client: read");
 			} else {
-				printf( "%s\n", buf );
-				buf[0] = '\0';
+				strcat( buf, "\n" );
+				write( 1, buf, sizeof( buf ) );	// Write to parent's STDOUT
 			}
 		}
 		if( close( fildes[0]) == -1 ) perror( "client: close read");
@@ -55,10 +58,14 @@ int main( int argc, char *argv[]) {
 		double a[number];
 		long current_time;
 		char string_time[20];
+		int wstatus;
 
 		while( TRUE ) {
-			string_time[0] = '\0';
-			buf[0] = '\0';
+			// Overwrite all the memory dedicated for for strings, this actually caused problems, for some reasone memset doesn't work. For some reason after 64 char string contain some garbage... I wish I had someone explain me why
+			for( i = 0; i < BUFF_SIZE; i++ ) {
+				buf[i] = '\0';
+				if ( i < 20 ) string_time[i] = '\0';
+			}
 
 			// Get current seconds since EPOCH
 			current_time =  (long)time( NULL );
@@ -71,7 +78,6 @@ int main( int argc, char *argv[]) {
 
 			if( getloadavg( a, number ) == -1 ) perror( "getloadavg");
 
-			int i;
 			for( i = 0; i < number; i++ ) {
 				char string_metric[5];
 				if( sprintf( string_metric, "%.2f,", a[i] ) == -1 ) perror( "server: sprintf metric");
@@ -79,7 +85,6 @@ int main( int argc, char *argv[]) {
 			}
 
 			// Wait until child will be in STOPped state
-			int wstatus;
 			pid_t w = waitpid( -1, &wstatus, WUNTRACED );
 			if( w == -1 ) {
 				perror( "server: wait for child failed");
