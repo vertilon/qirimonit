@@ -45,7 +45,7 @@ int main( int argc, char *argv[]) {
 				perror( "client: read");
 			} else {
 				strcat( buf, "\n" );
-				write( 1, buf, sizeof( buf ) );	// Write to parent's STDOUT
+				write( 1, buf, strlen( buf ) );	// Write to parent's STDOUT
 			}
 		}
 		if( close( fildes[0]) == -1 ) perror( "client: close read");
@@ -61,11 +61,8 @@ int main( int argc, char *argv[]) {
 		int wstatus;
 
 		while( TRUE ) {
-			// Overwrite all the memory dedicated for for strings, this actually caused problems, for some reasone memset doesn't work. For some reason after 64 char string contain some garbage... I wish I had someone explain me why
-			for( i = 0; i < BUFF_SIZE; i++ ) {
-				buf[i] = '\0';
-				if ( i < 20 ) string_time[i] = '\0';
-			}
+			memset( buf, '\0', BUFF_SIZE );
+			memset( string_time, '\0', 20 );
 
 			// Get current seconds since EPOCH
 			current_time =  (long)time( NULL );
@@ -91,7 +88,7 @@ int main( int argc, char *argv[]) {
 				break;
 			} else if( WIFSTOPPED( wstatus )) {
 				// Send data to pipe
-				if( write( fildes[1], buf, sizeof( buf ) ) == -1 ) perror( "server: write");
+				if( write( fildes[1], buf, BUFF_SIZE ) == -1 ) perror( "server: write");
 				// CONTIUNE child process to be able to read sent data
 				if( kill( 0, SIGCONT ) == -1 ) perror( "server: send SIGCONT to child");
 			} else {

@@ -1,4 +1,4 @@
-build:
+build: clean
 	mkdir build
 	cc qirimonit.c -o build/qirimonit
 
