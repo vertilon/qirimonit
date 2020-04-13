@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 		init_sysinfo_metricc(interval);
 	} else {
 		init_kill_handler();
-		while(TRUE) { ; }
+		pause();
 	}
 	return EXIT_SUCCESS;
 }

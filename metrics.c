@@ -25,21 +25,19 @@ char *epoch_seconds() {
 	return string_time;
 }
 
-char *load_avg() {
+void append_load_avg(char string_load_avg[]) {
 	const int number = 3;
 	double a[number];
-	char *string_load_avg = malloc(BUFF_SIZE);
+	char string_metric[5];
 
 	if(getloadavg(a, number) == -1) perror("getloadavg");
 
 	int i;
 	for(i = 0; i < number; i++) {
-		char string_metric[5];
 		// Assuming that data will be send in csv format with ',' as a delimiter
 		if(sprintf(string_metric, "%.2f,", a[i]) == -1) perror("metric collector: sprintf metric");
 		strcat(string_load_avg, string_metric);
 	}
-	return string_load_avg;
 }
 
 void write_pipe_metric(int write_fd, pid_t out_pid) {
@@ -55,7 +53,7 @@ void write_pipe_metric(int write_fd, pid_t out_pid) {
 		strcat(buf, epoch_seconds());
 		strcat(buf, ",");
 		// Write load average to buffer
-		strcat(buf, load_avg());
+		append_load_avg(buf);
 
 		// Send data to pipe
 		if(write(write_fd, &buf, BUFF_SIZE) == -1) perror("metric collector: write");

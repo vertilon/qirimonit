@@ -2,7 +2,7 @@
 #define _METRICS_H_
  
 char *epoch_seconds(void);
-char *load_avg(void);
+void append_load_avg(char[]);
 void write_pipe_metric(int, int);
 void init_sysinfo_metricc(int);
   
