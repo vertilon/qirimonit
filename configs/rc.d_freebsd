@@ -1,0 +1,13 @@
+#!/bin/sh
+
+. /etc/rc.subr
+
+name=qirimonit
+rcvar=qirimonit_enabled
+
+command="/usr/local/bin/qirimonit"
+command_args=">> _qirimonit_data_file_ &"
+
+pidfile="/var/run/${name}.pid"
+load_rc_config $name
+run_rc_command "$1"

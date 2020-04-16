@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 		init_sysinfo_metricc(interval);
 	} else {
 		init_kill_handler();
+		write_pid_file();
 		pause();
 	}
 	return EXIT_SUCCESS;
